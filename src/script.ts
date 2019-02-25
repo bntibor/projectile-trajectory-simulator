@@ -21,9 +21,11 @@ class ProjectileMotionSimulation {
 
     private range: number;
 
+    private flatRange: number;
+
     private flightTime: number;
 
-    constructor(speed: number, angle: number, canvas:HTMLCanvasElement, canonLength?: number) {
+    constructor(speed: number, angle: number, canvas: HTMLCanvasElement, canonLength?: number) {
         this.speed = speed;
         this.angle = angle;
 
@@ -38,6 +40,7 @@ class ProjectileMotionSimulation {
 
         this.computeRange();
         this.computeFlightTime();
+        this.computeFlatRange();
     }
 
     clearScene() {
@@ -52,33 +55,34 @@ class ProjectileMotionSimulation {
         let trailCounter = 0;
 
         this.drawCannon();
-        
+
         function step(curentTime) {
             if (timeStamp) {
-                
+
                 let x = (curentTime / 1000 - timeStamp / 1000) * horizontalSpeed;
                 let y = thiz.canonFirePoint.y + thiz.f(x);
-                
+
                 x = x + thiz.canonFirePoint.x;
-                
+
                 thiz.clearScene();
                 thiz.drawCannon();
-                
+
                 thiz.ctx.fillStyle = 'red';
 
                 drawTrail();
-                
+
                 thiz.ctx.globalAlpha = 1;
                 thiz.ctx.beginPath();
                 thiz.ctx.arc(x, thiz.height - y, thiz.canonLength / 10, 0, 2 * Math.PI);
                 thiz.ctx.fill();
-                
-                addPointToTrail({x: x, y: y});
-                
+
+                addPointToTrail({ x: x, y: y });
+
                 if (y > 0) {
                     window.requestAnimationFrame(step);
                 } else {
                     thiz.drawRange();
+                    thiz.drawFlatRangeData();
                 }
             } else {
                 window.requestAnimationFrame(step);
@@ -86,7 +90,7 @@ class ProjectileMotionSimulation {
             }
         }
 
-        function addPointToTrail(point: Point){
+        function addPointToTrail(point: Point) {
             trailCounter++;
 
             if (trailCounter % 60 == 0) {
@@ -111,23 +115,54 @@ class ProjectileMotionSimulation {
 
     computeRange() {
         const radians = this.toRadians(this.angle);
-        this.range = ((this.speed * Math.cos(radians))/this.gravitationalAcceleration) * 
-            ((this.speed * Math.sin(radians)) + Math.sqrt(Math.pow(this.speed * Math.sin(radians), 2) + 
+        this.range = ((this.speed * Math.cos(radians)) / this.gravitationalAcceleration) *
+            ((this.speed * Math.sin(radians)) + Math.sqrt(Math.pow(this.speed * Math.sin(radians), 2) +
                 (2 * this.gravitationalAcceleration * this.canonFirePoint.y)));
+    }
+
+    computeFlatRange() {
+        this.flatRange = (Math.pow(this.speed, 2) * Math.sin(2 * this.toRadians(this.angle))) / this.gravitationalAcceleration;
     }
 
     drawRange() {
         const rangeMarking = this.range + this.canonFirePoint.x;
         const textStart = rangeMarking + 250 < this.width ? rangeMarking + 20 : rangeMarking - 240;
-        
+
         this.ctx.beginPath();
-        this.ctx.moveTo(rangeMarking, this.height - 50);
+        this.ctx.moveTo(rangeMarking, this.height - 150);
         this.ctx.lineTo(rangeMarking, this.height);
         this.ctx.stroke();
 
         this.ctx.font = "18px Arial";
         this.ctx.fillStyle = "black";
-        this.ctx.fillText("Distance traveled is " + this.range.toFixed(2) + "m", textStart, this.height - 50);
+        this.ctx.fillText("Distance traveled is " + this.range.toFixed(2) + "m", textStart, this.height - 150);
+    }
+
+    drawFlatRangeData() {
+        const rangeMarking = this.flatRange + this.canonFirePoint.x;
+        const textStart = rangeMarking + 250 < this.width ? rangeMarking + 20 : rangeMarking - 240;
+
+        this.ctx.strokeStyle = 'grey';
+        this.ctx.beginPath();
+        this.ctx.setLineDash([5, 15]);
+        this.ctx.moveTo(this.canonFirePoint.x, this.height - this.canonFirePoint.y);
+        this.ctx.lineTo(this.width, this.height - this.canonFirePoint.y);
+        this.ctx.stroke();
+
+        this.ctx.beginPath();
+        this.ctx.setLineDash([]);
+        this.ctx.moveTo(this.canonFirePoint.x + this.flatRange, this.height - this.canonFirePoint.y);
+        this.ctx.lineTo(this.canonFirePoint.x + this.flatRange, this.height - this.canonFirePoint.y - 150);
+        this.ctx.stroke();
+
+        this.ctx.font = "18px Arial";
+        this.ctx.fillStyle = "grey";
+        this.ctx.fillText("Flat distance traveled is " + this.flatRange.toFixed(2), textStart, this.height - this.canonFirePoint.y - 150);
+
+        this.ctx.fillStyle = "red";
+        this.ctx.beginPath();
+        this.ctx.arc(this.canonFirePoint.x + this.flatRange, this.height - this.canonFirePoint.y, this.canonLength / 10, 0, 2 * Math.PI);
+        this.ctx.fill();
     }
 
     computeFlightTime() {
@@ -165,7 +200,7 @@ class ProjectileMotionSimulation {
     drawBase() {
         this.ctx.fillStyle = 'black';
         this.ctx.beginPath()
-        this.ctx.arc(this.canonPivotPoint.x, this.height, this.canonLength / 2 , Math.PI *2, 0);
+        this.ctx.arc(this.canonPivotPoint.x, this.height, this.canonLength / 2, Math.PI * 2, 0);
         this.ctx.fill();
     }
 
@@ -211,7 +246,7 @@ class ProjectileMotionSimulation {
         let size = parseFloat((<HTMLInputElement>document.getElementById("size")).value);
         let canvas = <HTMLCanvasElement>document.getElementById("mainCanvas");
         let trajectory = new ProjectileMotionSimulation(speed, angle, canvas, size);
-    
+
         trajectory.playAnimation();
     }
 

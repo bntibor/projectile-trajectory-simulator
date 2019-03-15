@@ -50,39 +50,36 @@ class ProjectileMotionSimulation {
     playAnimation() {
         const horizontalSpeed = this.speed * Math.cos(this.toRadians(this.angle));
         let timeStamp = null;
-        let thiz = this;
         let trail: Point[] = [];
         let trailCounter = 0;
 
-        this.drawCannon();
-
-        function step(curentTime) {
+        const step = (curentTime) => {
             if (timeStamp) {
 
                 let x = (curentTime / 1000 - timeStamp / 1000) * horizontalSpeed;
-                let y = thiz.canonFirePoint.y + thiz.f(x);
+                let y = this.canonFirePoint.y + this.f(x);
 
-                x = x + thiz.canonFirePoint.x;
+                x = x + this.canonFirePoint.x;
 
-                thiz.clearScene();
-                thiz.drawCannon();
+                this.clearScene();
+                this.drawCannon();
 
-                thiz.ctx.fillStyle = 'red';
+                this.ctx.fillStyle = 'red';
 
                 drawTrail();
 
-                thiz.ctx.globalAlpha = 1;
-                thiz.ctx.beginPath();
-                thiz.ctx.arc(x, thiz.height - y, thiz.canonLength / 10, 0, 2 * Math.PI);
-                thiz.ctx.fill();
+                this.ctx.globalAlpha = 1;
+                this.ctx.beginPath();
+                this.ctx.arc(x, this.height - y, this.canonLength / 10, 0, 2 * Math.PI);
+                this.ctx.fill();
 
                 addPointToTrail({ x: x, y: y });
 
                 if (y > 0) {
                     window.requestAnimationFrame(step);
                 } else {
-                    thiz.drawRange();
-                    thiz.drawFlatRangeData();
+                    this.drawRange();
+                    this.drawFlatRangeData();
                 }
             } else {
                 window.requestAnimationFrame(step);
@@ -90,7 +87,7 @@ class ProjectileMotionSimulation {
             }
         }
 
-        function addPointToTrail(point: Point) {
+        const addPointToTrail = (point: Point) => {
             trailCounter++;
 
             if (trailCounter % 60 == 0) {
@@ -98,17 +95,18 @@ class ProjectileMotionSimulation {
             }
         }
 
-        function drawTrail() {
+        const drawTrail = () => {
 
-            thiz.ctx.globalAlpha = 0.5;
+            this.ctx.globalAlpha = 0.5;
 
             for (let point of trail) {
-                thiz.ctx.beginPath();
-                thiz.ctx.arc(point.x, thiz.height - point.y, thiz.canonLength / 10, 0, 2 * Math.PI);
-                thiz.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.arc(point.x, this.height - point.y, this.canonLength / 10, 0, 2 * Math.PI);
+                this.ctx.fill();
             }
         }
 
+        this.drawCannon();
         window.requestAnimationFrame(step);
 
     }
